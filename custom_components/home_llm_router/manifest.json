@@ -1,5 +1,5 @@
 {
-  "domain": "llama_conversation",
+  "domain": "home_llm_router",
   "name": "Home LLM (Router)",
   "version": "0.5.0",
   "codeowners": ["@acon96"],

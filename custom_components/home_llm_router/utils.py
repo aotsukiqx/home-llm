@@ -329,7 +329,7 @@ def install_llama_cpp_python(
     if not installed_wrong_version:
         error_message = (
             f"Unable to install package {wheel_location}: {install_error or 'unknown installation error'}. "
-            "Please manually build or download the wheels and place them in the `/config/custom_components/llama_conversation` directory. "
+            "Please manually build or download the wheels and place them in the `/config/custom_components/home_llm_router` directory. "
             "Make sure that you download the correct .whl file for your platform from the GitHub releases page."
         )
         if raise_on_error:

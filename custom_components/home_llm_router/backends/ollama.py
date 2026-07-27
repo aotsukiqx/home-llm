@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
-from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
-from custom_components.llama_conversation.const import (
+from custom_components.home_llm_router.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.home_llm_router.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
@@ -53,7 +53,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
 )
 
-from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
+from custom_components.home_llm_router.entity import LocalLLMClient, TextGenerationResult
 
 _LOGGER = logging.getLogger(__name__)
 

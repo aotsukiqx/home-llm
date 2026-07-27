@@ -373,7 +373,7 @@
                     "reinstall_llama_cpp": "Reinstall Llama.cpp",
                     "installed_llama_cpp_version": "Version to (re)install"
                 },
-                "description": "__If you are experiencing issues with Llama.cpp__, you can force a reinstall of the package here. This will attempt to re-install or upgrade the llama-cpp-python package from GitHub *or* a local wheel file placed in the `/config/custom_components/llama_conversation/` directory.",
+                "description": "__If you are experiencing issues with Llama.cpp__, you can force a reinstall of the package here. This will attempt to re-install or upgrade the llama-cpp-python package from GitHub *or* a local wheel file placed in the `/config/custom_components/home_llm_router/` directory.",
                 "title": "Reinstall Llama.cpp"
             }
         },

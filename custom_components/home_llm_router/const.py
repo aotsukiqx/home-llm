@@ -2,7 +2,7 @@
 import types, os
 from typing import Any
 
-DOMAIN = "llama_conversation"
+DOMAIN = "home_llm_router"
 HOME_LLM_API_ID = "home-llm-service-api"
 SERVICE_TOOL_NAME = "HassCallService"
 SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover", "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item", "set_temperature", "set_humidity", "set_fan_mode", "set_hvac_mode", "set_preset_mode"]

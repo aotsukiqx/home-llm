@@ -13,7 +13,7 @@ from homeassistant.exceptions import TemplateError, HomeAssistantError
 from homeassistant.helpers import chat_session, intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from custom_components.llama_conversation.utils import MalformedToolCallException, strip_thinking_blocks
+from custom_components.home_llm_router.utils import MalformedToolCallException, strip_thinking_blocks
 
 from .entity import LocalLLMEntity, LocalLLMClient, LocalLLMConfigEntry
 from .const import (

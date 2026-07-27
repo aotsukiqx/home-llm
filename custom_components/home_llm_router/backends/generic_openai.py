@@ -13,8 +13,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers import llm
 from openai import AsyncOpenAI, OpenAIError
 
-from custom_components.llama_conversation.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
-from custom_components.llama_conversation.const import (
+from custom_components.home_llm_router.utils import format_url, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.home_llm_router.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
@@ -40,7 +40,7 @@ from custom_components.llama_conversation.const import (
     DEFAULT_USE_SERVER_SAMPLING_DEFAULTS,
     RECOMMENDED_CHAT_MODELS,
 )
-from custom_components.llama_conversation.entity import TextGenerationResult, LocalLLMClient
+from custom_components.home_llm_router.entity import TextGenerationResult, LocalLLMClient
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ from homeassistant.helpers import llm, json as ha_json
 
 from voluptuous_openapi import convert as convert_to_openapi
 
-from custom_components.llama_conversation.const import (
+from custom_components.home_llm_router.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
@@ -38,8 +38,8 @@ from custom_components.llama_conversation.const import (
     DEFAULT_API_PATH,
 )
 
-from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
-from custom_components.llama_conversation.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback
+from custom_components.home_llm_router.entity import LocalLLMClient, TextGenerationResult
+from custom_components.home_llm_router.utils import get_file_contents_base64, parse_tool_arguments_with_repair_fallback
 
 _LOGGER = logging.getLogger(__name__)
 

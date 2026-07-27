@@ -18,8 +18,8 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.event import async_track_state_change, async_call_later
 
-from custom_components.llama_conversation.utils import LlamaCppPythonInstallError, install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
-from custom_components.llama_conversation.const import (
+from custom_components.home_llm_router.utils import LlamaCppPythonInstallError, install_llama_cpp_python, validate_llama_cpp_python_installation, get_oai_formatted_messages, get_oai_formatted_tools
+from custom_components.home_llm_router.const import (
     CONF_ENABLE_LEGACY_TOOL_CALLING,
     CONF_TOOL_RESPONSE_AS_STRING,
     CONF_INSTALLED_LLAMACPP_VERSION,
@@ -67,7 +67,7 @@ from custom_components.llama_conversation.const import (
     DOMAIN,
     CONF_RESPONSE_JSON_SCHEMA,
 )
-from custom_components.llama_conversation.entity import LocalLLMClient, TextGenerationResult
+from custom_components.home_llm_router.entity import LocalLLMClient, TextGenerationResult
 
 # make type checking work for llama-cpp-python without importing it directly at runtime
 from typing import TYPE_CHECKING

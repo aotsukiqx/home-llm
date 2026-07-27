@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from custom_components.llama_conversation.const import (
+from custom_components.home_llm_router.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_TOP_K,
@@ -37,8 +37,8 @@ from custom_components.llama_conversation.const import (
     TEXT_GEN_WEBUI_CHAT_MODE_INSTRUCT,
     TEXT_GEN_WEBUI_CHAT_MODE_CHAT_INSTRUCT,
 )
-from custom_components.llama_conversation.backends.generic_openai import GenericOpenAIAPIClient
-from custom_components.llama_conversation.utils import format_url
+from custom_components.home_llm_router.backends.generic_openai import GenericOpenAIAPIClient
+from custom_components.home_llm_router.utils import format_url
 
 _LOGGER = logging.getLogger(__name__)
 
