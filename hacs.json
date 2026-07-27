@@ -1,5 +1,5 @@
 {
-    "name": "Local LLMs",    
+    "name": "Home LLM (Router)",    
     "homeassistant": "2026.5.0",
     "content_in_root": false,
     "render_readme": true
