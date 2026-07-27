@@ -456,6 +456,7 @@ class OptionsFlow(BaseOptionsFlow):
     reinstall_task: Task[Any] | None = None
     wheel_install_error: str | None = None
     wheel_install_successful: bool = False
+    _client_config: dict[str, Any] | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -474,7 +475,8 @@ class OptionsFlow(BaseOptionsFlow):
         if self.wheel_install_successful:
             client_config[CONF_INSTALLED_LLAMACPP_VERSION] = await self.hass.async_add_executor_job(get_llama_cpp_python_version)
             _LOGGER.debug(f"new version is: {client_config[CONF_INSTALLED_LLAMACPP_VERSION]}")
-            return self.async_create_entry(data=client_config)
+            self._client_config = client_config
+            return await self.async_step_router()
 
         if backend_type == BACKEND_TYPE_LLAMA_CPP:
             potential_versions = await get_available_llama_cpp_versions(self.hass)
@@ -502,7 +504,8 @@ class OptionsFlow(BaseOptionsFlow):
                 connect_err = await BACKEND_TO_CLS[backend_type].async_validate_connection(self.hass, client_config)
 
                 if not connect_err:
-                    return self.async_create_entry(data=client_config)
+                    self._client_config = client_config
+                    return await self.async_step_router()
                 else:
                     errors["base"] = "failed_to_connect"
                     description_placeholders["exception"] = str(connect_err)
@@ -575,6 +578,93 @@ class OptionsFlow(BaseOptionsFlow):
                 _LOGGER.debug(f"Finished install: {wheel_install_result}")
                 self.wheel_install_successful = True
                 return self.async_show_progress_done(next_step_id="init")
+
+    async def async_step_router(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure Router Agent (embedding service + fallback)."""
+        client_config = self._client_config or {}
+
+        # Check if Router Agent exists
+        router = self.hass.data.get(DOMAIN, {}).get("router_agent")
+        if router is None:
+            return self.async_create_entry(data=client_config)
+
+        if user_input is not None:
+            # Build router config from form input
+            emb_config = None
+            if user_input.get("emb_base_url") and user_input.get("emb_model"):
+                from .router_config import EmbeddingConfig
+                emb_config = EmbeddingConfig(
+                    base_url=user_input["emb_base_url"],
+                    api_key=user_input.get("emb_api_key", ""),
+                    model=user_input["emb_model"],
+                    dimensions=int(user_input.get("emb_dimensions", 1024)),
+                )
+
+            from .router_config import RouterConfigData
+            existing = await router.config_store.async_load()
+            new_config = RouterConfigData(
+                embedding=emb_config,
+                routes=existing.routes,
+                fallback=user_input.get("fallback"),
+            )
+            await router.config_store.async_save(new_config)
+
+            # Re-initialize router with new config
+            router._initialized = False
+            await router.async_initialize()
+
+            return self.async_create_entry(data=client_config)
+
+        # Build form schema with pre-filled values
+        current_emb = router.config_store.data.embedding
+        schema = {}
+
+        schema[vol.Optional(
+            "emb_base_url",
+            default=current_emb.base_url if current_emb else "",
+        )] = TextSelector(TextSelectorConfig())
+        schema[vol.Optional(
+            "emb_api_key",
+            default=current_emb.api_key if current_emb else "",
+        )] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+        schema[vol.Optional(
+            "emb_model",
+            default=current_emb.model if current_emb else "",
+        )] = TextSelector(TextSelectorConfig())
+        schema[vol.Optional(
+            "emb_dimensions",
+            default=current_emb.dimensions if current_emb else 1024,
+        )] = NumberSelector(
+            NumberSelectorConfig(min=64, max=3072, step=64, mode=NumberSelectorMode.BOX)
+        )
+
+        # Fallback backend selector
+        backend_options = router.get_available_backends()
+        if backend_options:
+            current_fallback = router.config_store.data.fallback
+            schema[vol.Optional(
+                "fallback",
+                default=current_fallback if current_fallback else (
+                    backend_options[0].value if backend_options else None
+                ),
+            )] = SelectSelector(
+                SelectSelectorConfig(
+                    options=backend_options,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+
+        routes_count = len(router.config_store.data.routes)
+        return self.async_show_form(
+            step_id="router",
+            data_schema=vol.Schema(schema),
+            description_placeholders={
+                "routes_count": str(routes_count),
+            },
+            last_step=True,
+        )
     
 
 def STEP_LOCAL_MODEL_SELECTION_DATA_SCHEMA(model_file=None, chat_model=None, downloaded_model_quantization=None, available_quantizations=None):

@@ -4,11 +4,13 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-from typing import Final
+from typing import Any, Final
 
+from homeassistant.components import conversation as ha_conversation
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import ATTR_ENTITY_ID, Platform, CONF_HOST, CONF_PORT, CONF_SSL, CONF_LLM_HASS_API
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, llm, device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonObjectType
 from types import MappingProxyType
@@ -56,6 +58,7 @@ from .backends.tailored_openai import TextGenerationWebuiClient, LlamaCppServerC
 from .backends.ollama import OllamaAPIClient
 from .backends.anthropic import AnthropicAPIClient
 from .utils import get_llama_cpp_python_version, download_model_from_hf
+from .router_agent import RouterConversationAgent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +105,75 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
+    # Register Router Agent on first entry setup
+    if "router_agent" not in hass.data.get(DOMAIN, {}):
+        router = RouterConversationAgent(hass)
+        component = hass.data.get(ha_conversation.DATA_COMPONENT)
+        if component is not None:
+            await component.async_add_entities([router])
+            hass.data.setdefault(DOMAIN, {})["router_agent"] = router
+            _LOGGER.debug("Router Agent registered")
+
+    # Register router_configure service (once)
+    if "services_registered" not in hass.data.get(DOMAIN, {}):
+
+        async def _handle_router_configure(service_call: ServiceCall) -> ServiceResponse:
+            return await async_router_configure(hass, dict(service_call.data))
+
+        hass.services.async_register(
+            DOMAIN,
+            "router_configure",
+            _handle_router_configure,
+            schema=vol.Schema(
+                {
+                    vol.Optional("embedding"): vol.Schema(
+                        {
+                            vol.Required("base_url"): str,
+                            vol.Optional("api_key", default=""): str,
+                            vol.Required("model"): str,
+                            vol.Optional("dimensions", default=1024): int,
+                        }
+                    ),
+                    vol.Optional("routes", default=list): [
+                        vol.Schema(
+                            {
+                                vol.Required("name"): str,
+                                vol.Optional("label"): str,
+                                vol.Required("target"): str,
+                                vol.Optional("threshold", default=0.70): float,
+                                vol.Optional("utterances", default=list): [str],
+                            }
+                        )
+                    ],
+                    vol.Optional("fallback"): vol.Any(str, None),
+                }
+            ),
+            supports_response=SupportsResponse.OPTIONAL,
+        )
+        hass.data.setdefault(DOMAIN, {})["services_registered"] = True
+        _LOGGER.debug("Router configure service registered")
+
     return True
+
+
+async def async_router_configure(
+    hass: HomeAssistant, config_data: dict[str, Any]
+) -> dict[str, Any]:
+    """Handle router configuration from service call."""
+    router: RouterConversationAgent | None = hass.data.get(DOMAIN, {}).get("router_agent")
+    if not router:
+        raise HomeAssistantError("Router Agent is not registered.")
+
+    from .router_config import RouterConfigData
+
+    new_config = RouterConfigData.from_dict(config_data)
+    router.config_store._loaded = True
+    await router.config_store.async_save(new_config)
+
+    router._initialized = False
+    await router.async_initialize()
+
+    return {"status": "ok", "routes": len(new_config.routes)}
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> None:
