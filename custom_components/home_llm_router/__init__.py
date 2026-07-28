@@ -154,7 +154,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
 
 async def _async_ensure_router_agent(hass: HomeAssistant) -> None:
-    """Create and register RouterConversationAgent if not already present."""
+    """Create Router ConfigEntry + RouterConversationAgent if not present."""
+    # Create Router ConfigEntry if none exists
+    from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
+
+    has_router_entry = any(
+        e.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER
+        for e in hass.config_entries.async_entries(DOMAIN)
+    )
+    if not has_router_entry:
+        router_entry = ConfigEntry(
+            version=3,
+            minor_version=3,
+            domain=DOMAIN,
+            title="Router Configuration",
+            data={CONF_ENTRY_TYPE: ENTRY_TYPE_ROUTER},
+            options={},
+            source=SOURCE_IMPORT,
+        )
+        await hass.config_entries.async_add(router_entry)
+        _LOGGER.debug("Router ConfigEntry created")
+
+    # Create Router ConversationAgent entity if not present
     if "router_agent" in hass.data.get(DOMAIN, {}):
         return
     router = RouterConversationAgent(hass)

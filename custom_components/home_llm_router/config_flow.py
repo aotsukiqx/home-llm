@@ -655,7 +655,8 @@ class OptionsFlow(BaseOptionsFlow):
             return await self.async_step_router_routes()
 
         # Build form schema with pre-filled values
-        current_emb = router.config_store.data.embedding
+        current_config = await router.config_store.async_load()
+        current_emb = current_config.embedding
         schema = {}
 
         schema[vol.Optional(
@@ -680,7 +681,7 @@ class OptionsFlow(BaseOptionsFlow):
         # Fallback backend selector
         backend_options = router.get_available_backends()
         if backend_options:
-            current_fallback = router.config_store.data.fallback
+            current_fallback = current_config.fallback
             schema[vol.Optional(
                 "fallback",
                 default=current_fallback if current_fallback else (
@@ -693,7 +694,7 @@ class OptionsFlow(BaseOptionsFlow):
                 )
             )
 
-        routes_count = len(router.config_store.data.routes)
+        routes_count = len(current_config.routes)
         return self.async_show_form(
             step_id="router",
             data_schema=vol.Schema(schema),
