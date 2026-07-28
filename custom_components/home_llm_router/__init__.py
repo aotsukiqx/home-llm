@@ -25,6 +25,8 @@ from .const import (
     SERVICE_TOOL_ALLOWED_SERVICES,
     SERVICE_TOOL_ALLOWED_DOMAINS,
     CONF_BACKEND_TYPE,
+    CONF_ENTRY_TYPE,
+    ENTRY_TYPE_ROUTER,
     CONF_INSTALLED_LLAMACPP_VERSION,
     CONF_SELECTED_LANGUAGE,
     CONF_API_KEY,
@@ -84,20 +86,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
 
+    # Router entry — no backend setup needed
+    if entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER:
+        await _async_ensure_router_agent(hass)
+        return True
+
+    # Backend entry — current flow
     def create_client(backend_type):
         _LOGGER.debug("Creating Local LLM client of type %s", backend_type)
-        # Merge entry.data and entry.options - data has connection info, options has model settings
         client_options = {**dict(entry.data), **dict(entry.options)}
         return BACKEND_TO_CLS[backend_type](hass, client_options)
 
-    # create the agent in an executor job because the constructor calls `open()`
     backend_type = entry.data.get(CONF_BACKEND_TYPE, DEFAULT_BACKEND_TYPE)
     entry.runtime_data = await hass.async_add_executor_job(create_client, backend_type)
 
     try:
         await entry.runtime_data.async_validate_startup(entry)
-
-        # forward setup to platform to register the entity
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except Exception:
         hass.data[DOMAIN].pop(entry.entry_id, None)
@@ -105,14 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    # Register Router Agent on first entry setup
-    if "router_agent" not in hass.data.get(DOMAIN, {}):
-        router = RouterConversationAgent(hass)
-        component = hass.data.get(ha_conversation.DATA_COMPONENT)
-        if component is not None:
-            await component.async_add_entities([router])
-            hass.data.setdefault(DOMAIN, {})["router_agent"] = router
-            _LOGGER.debug("Router Agent registered")
+    await _async_ensure_router_agent(hass)
 
     # Register router_configure service (once)
     if "services_registered" not in hass.data.get(DOMAIN, {}):
@@ -154,6 +151,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
         _LOGGER.debug("Router configure service registered")
 
     return True
+
+
+async def _async_ensure_router_agent(hass: HomeAssistant) -> None:
+    """Create and register RouterConversationAgent if not already present."""
+    if "router_agent" in hass.data.get(DOMAIN, {}):
+        return
+    router = RouterConversationAgent(hass)
+    component = hass.data.get(ha_conversation.DATA_COMPONENT)
+    if component is not None:
+        await component.async_add_entities([router])
+        hass.data.setdefault(DOMAIN, {})["router_agent"] = router
+        _LOGGER.debug("Router Agent registered")
 
 
 async def async_router_configure(

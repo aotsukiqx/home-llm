@@ -168,6 +168,9 @@ from .const import (
     option_overrides,
     RECOMMENDED_CHAT_MODELS,
     EMBEDDED_LLAMA_CPP_PYTHON_VERSION,
+    CONF_ENTRY_TYPE,
+    ENTRY_TYPE_ROUTER,
+    ENTRY_TYPE_BACKEND,
 )
 
 from . import HomeLLMAPI, LocalLLMConfigEntry, LocalLLMClient, BACKEND_TO_CLS
@@ -284,10 +287,32 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
             if not any([x.id == HOME_LLM_API_ID for x in llm.async_get_apis(self.hass)]):
                 llm.async_register_api(self.hass, HomeLLMAPI(self.hass))
 
-            self.internal_step = "pick_backend"
+            self.internal_step = "choose_type"
             return self.async_show_form(
-                step_id="user", data_schema=pick_backend_schema(), last_step=False
+                step_id="user",
+                data_schema=vol.Schema({
+                    vol.Required("setup_type", default="backend"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                {"value": "backend", "label": "Add LLM Backend"},
+                                {"value": "router", "label": "Configure Router Agent"},
+                            ],
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    ),
+                }),
+                last_step=False,
             )
+        elif self.internal_step == "choose_type":
+            if user_input:
+                if user_input.get("setup_type") == "router":
+                    return await self.async_step_create_router()
+                # Else: continue to backend flow
+                self.internal_step = "pick_backend"
+                return self.async_show_form(
+                    step_id="user", data_schema=pick_backend_schema(), last_step=False
+                )
+            return self.async_abort(reason="unknown")
         elif self.internal_step == "pick_backend":
             if user_input:
                 backend = user_input[CONF_BACKEND_TYPE]
@@ -426,6 +451,15 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
             data={CONF_BACKEND_TYPE: backend},
             options=self.client_config,
         )
+
+    async def async_step_create_router(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create a Router ConfigEntry for managing routing rules."""
+        return self.async_create_entry(
+            title="Router Configuration",
+            data={CONF_ENTRY_TYPE: ENTRY_TYPE_ROUTER},
+        )
     
     @classmethod
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
@@ -463,6 +497,10 @@ class OptionsFlow(BaseOptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        # Router entry → show router config directly
+        if self.config_entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER:
+            return await self.async_step_router()
+
         errors = {}
         description_placeholders = {}
 

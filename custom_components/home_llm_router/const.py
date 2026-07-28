@@ -4,6 +4,9 @@ from typing import Any
 
 DOMAIN = "home_llm_router"
 HOME_LLM_API_ID = "home-llm-service-api"
+CONF_ENTRY_TYPE = "entry_type"
+ENTRY_TYPE_BACKEND = "backend"
+ENTRY_TYPE_ROUTER = "router"
 SERVICE_TOOL_NAME = "HassCallService"
 SERVICE_TOOL_ALLOWED_SERVICES = ["turn_on", "turn_off", "toggle", "press", "increase_speed", "decrease_speed", "open_cover", "close_cover", "stop_cover", "lock", "unlock", "start", "stop", "return_to_base", "pause", "cancel", "add_item", "set_temperature", "set_humidity", "set_fan_mode", "set_hvac_mode", "set_preset_mode"]
 SERVICE_TOOL_ALLOWED_DOMAINS = ["light", "switch", "button", "fan", "cover", "lock", "media_player", "climate", "vacuum", "todo", "timer", "script"]
@@ -120,6 +123,7 @@ BACKEND_TYPE_GENERIC_OPENAI_RESPONSES = "generic_openai_responses"
 BACKEND_TYPE_LLAMA_CPP_SERVER = "llama_cpp_server"
 BACKEND_TYPE_OLLAMA = "ollama"
 BACKEND_TYPE_ANTHROPIC = "anthropic"
+BACKEND_TYPE_ROUTER = "router"
 DEFAULT_BACKEND_TYPE = BACKEND_TYPE_LLAMA_CPP
 CONF_BASE_URL = "base_url"
 CONF_INSTALLED_LLAMACPP_VERSION = "installed_llama_cpp_version"
