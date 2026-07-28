@@ -415,5 +415,42 @@
                 "pl": "Polish"
             }
         }
+    },
+    "options": {
+        "step": {
+            "router": {
+                "title": "Router Agent — Embedding Service",
+                "description": "Configure the embedding API for semantic routing. The API must be OpenAI-compatible (e.g. OpenAI, Azure, or any proxy supporting the /v1/embeddings endpoint).",
+                "data": {
+                    "emb_base_url": "API Base URL",
+                    "emb_api_key": "API Key",
+                    "emb_model": "Model name",
+                    "emb_dimensions": "Embedding dimensions",
+                    "fallback": "Fallback backend"
+                }
+            },
+            "router_routes": {
+                "title": "Routing Rules",
+                "description": "You have {route_count} route(s) configured. Add new rules or edit existing ones."
+            },
+            "router_edit_route": {
+                "title": "Edit Routing Rule",
+                "description": "Define example utterances for this route. When a user query matches semantically, it will be sent to the selected backend.",
+                "data": {
+                    "name": "Rule name",
+                    "label": "Display label",
+                    "target": "Target backend",
+                    "threshold": "Match threshold",
+                    "utterances": "Example utterances (one per line)"
+                }
+            },
+            "router_delete_route": {
+                "title": "Delete Routing Rule",
+                "description": "Select a route to remove.",
+                "data": {
+                    "route_index": "Route to delete"
+                }
+            }
+        }
     }
 }
