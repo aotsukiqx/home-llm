@@ -699,7 +699,7 @@ class OptionsFlow(BaseOptionsFlow):
             schema[vol.Optional(
                 "fallback",
                 default=current_fallback if current_fallback else (
-                    backend_options[0].value if backend_options else None
+                    backend_options[0]["value"] if backend_options else None
                 ),
             )] = SelectSelector(
                 SelectSelectorConfig(
@@ -809,7 +809,7 @@ class OptionsFlow(BaseOptionsFlow):
             vol.Optional("label", default=existing.get("label", existing.get("name", ""))): str,
         }
         if backend_options:
-            schema[vol.Required("target", default=existing.get("target", backend_options[0].value))] = SelectSelector(
+            schema[vol.Required("target", default=existing.get("target", backend_options[0]["value"]))] = SelectSelector(
                 SelectSelectorConfig(options=backend_options, mode=SelectSelectorMode.DROPDOWN)
             )
         else:
