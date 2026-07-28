@@ -24,6 +24,7 @@ from .router_config import BackendInfo, RouterConfigData, RoutingResult
 from .router_engine import TaskRouter
 
 _LOGGER = logging.getLogger(__name__)
+_LOGGER.warning("router_agent.py module loaded (__name__=%s)", __name__)
 
 STORAGE_KEY = f"{DOMAIN}.router_config"
 STORAGE_VERSION = 1
