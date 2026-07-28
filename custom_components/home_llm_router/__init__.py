@@ -180,10 +180,17 @@ async def _async_ensure_router_agent(hass: HomeAssistant) -> None:
         return
     router = RouterConversationAgent(hass)
     component = hass.data.get(ha_conversation.DATA_COMPONENT)
-    if component is not None:
-        await component.async_add_entities([router])
-        hass.data.setdefault(DOMAIN, {})["router_agent"] = router
-        _LOGGER.debug("Router Agent registered")
+    if component is None:
+        _LOGGER.warning("Router Agent: conversation component not ready, DATA_COMPONENT=%s", ha_conversation.DATA_COMPONENT)
+        return
+    await component.async_add_entities([router])
+    hass.data.setdefault(DOMAIN, {})["router_agent"] = router
+    _LOGGER.info(
+        "Router Agent registered: entity_id=%s, hass.data[%s].entities=%d available backends",
+        router.entity_id,
+        ha_conversation.DATA_COMPONENT,
+        len(list(component.entities)) if hasattr(component, 'entities') else -1,
+    )
 
 
 async def async_router_configure(
