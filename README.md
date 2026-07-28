@@ -1,8 +1,10 @@
-# Home LLM
+# Home LLM (Router)
+
+> **Fork notice**: This is a fork of [acon96/home-llm](https://github.com/acon96/home-llm) with the addition of **embedding-based semantic routing**. The original integration (`Local LLMs`) focuses on direct LLM backends; this fork adds a Router Agent that automatically dispatches requests to the most appropriate backend based on intent similarity. Both integrations can coexist in the same Home Assistant instance under different domain names.
 
 Control your Home Assistant smart home with a **completely local** Large Language Model. No cloud services and no subscriptions needed. Just privacy-focused AI running entirely on your own hardware.
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=aotsukiqx)
 
 ## What is Home LLM?
 
@@ -16,6 +18,7 @@ Home LLM is a complete solution for adding AI-powered voice and chat control to 
 - 🏠 **Fully Local** – Everything runs on your hardware. Your data never leaves your control (unless you want to!)
 - 🗣️ **Voice & Chat Control** – Use as a conversation agent with voice assistants or chat interfaces
 - 🤖 **AI Task Automation** – Generate dynamic content and structured data for automations
+- 🔀 **Semantic Routing** *(fork addition)* – Deploy multiple LLM backends and route requests by intent similarity, sending simple commands to fast models and complex tasks to capable models
 - 🌍 **Multi-Language Support** – Built-in support for English, German, French, Spanish, and Polish (better translations are welcome!)
 - ⚡ **Runs on Low-Power Devices** – Models work on Raspberry Pi and other modest hardware -- no GPU required!
 - 🔌 **Flexible Backends** – Run models locally as part of Home Assistant **or** connect to external model providers
@@ -117,7 +120,26 @@ The fine-tuning dataset and training scripts are included in this repository:
 
 ---
 
-## Version History
+## Changelog
+
+### v0.5.0 — 2026-07-28
+
+> First release of the **Home LLM (Router)** fork. This version introduces an embedding-based semantic routing layer built on top of the original home-llm integration.
+
+**New features:**
+- **Router Agent** — Auto-registered `ConversationEntity` that acts as a smart dispatcher between multiple LLM backends. Select it in your voice pipeline and it automatically routes each request to the best-suited model.
+- **Embedding-based semantic routing** — Configure route categories with example utterances. User queries are compared via cosine similarity to determine intent and dispatched to the appropriate backend.
+- **OpenAI-compatible Embedding API** — Connect to any embedding service (OpenAI, or any OpenAI-compatible provider) via configurable base URL, API key, model, and dimensions.
+- **`router_configure` service** — Programmatic configuration endpoint for setting embedding service, route rules, and fallback backend.
+- **OptionsFlow integration** — Embedding service and fallback backend configurable through the existing HA UI options flow.
+- **Fallback chain** — When a matched route's target backend is unavailable, automatically falls through to the next matching rule, then to the configured fallback, then to any available backend.
+
+**Fixes & improvements over upstream v0.4.10:**
+- Anthropic backend: Fixed authentication header format for third-party API proxies (added Bearer token prefix, removed dummy-key workaround)
+- Changed integration domain to `home_llm_router` to allow coexistence with the original `acon96/home-llm` integration
+
+<details>
+<summary>Upstream Version History (acon96/home-llm v0.4.10 and earlier)</summary>
 
 | Version    | Highlights                                                                                                                                                                                                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -129,37 +151,6 @@ The fine-tuning dataset and training scripts are included in this repository:
 | **v0.4.5**  | AI Task entities, multiple LLM APIs at once, official Ollama package                                                                                                                                                                                                                                               |
 | **v0.4**    | Tool calling rewrite, voice streaming, agentic tool use loop, multiple configs per backend                                                                                                                                                                                                                         |
 | **v0.3**    | Home Assistant LLM API support, improved prompting, HuggingFace GGUF auto-detection                                                                                                                                                                                                                                |
-
-<details>
-<summary>Full Version History</summary>
-
-| Version | Description                                                                                                                                                                                                                                                                                                        |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| v0.4.10 | Bug fixes and manual parsing improvements for tool calls and thinking blocks                                                                                                                                                                                                                                       |
-| v0.4.9  | Relax dependency requirements to avoid conflicting with internal HA lib versions                                                                                                                                                                                                                                   |
-| v0.4.8  | OpenAI backends rewritten using the official openai Python library for better reliability and compatibility. New "Use server sampling defaults" to let your backend set the sampling parameters. More robust tool call parsing with auto-repair for malformed JSON, ability to disable streaming for all backends. |
-| v0.4.7  | Bug fixes, update default llama_cpp_python version to support new models, and support python 3.14 for new Home Assistant versions                                                                                                                                                                                  |
-| v0.4.6  | New dataset supporting proper tool calling, Add Anthropic "messages" style API support, Add on-disk caching for Llama.cpp backend                                                                                                                                                                                  |
-| v0.4.5  | Add support for AI Task entities, Replace custom Ollama API implementation with the official `ollama-python` package, Support multiple LLM APIs at once                                                                                                                                                            |
-| v0.4.4  | Fix issue with OpenAI backends appending `/v1` to all URLs                                                                                                                                                                                                                                                         |
-| v0.4.3  | Fix model config creation during setup                                                                                                                                                                                                                                                                             |
-| v0.4.2  | Fix default model settings, numeric config fields, finish_reason handling                                                                                                                                                                                                                                          |
-| v0.4.1  | Fix Llama.cpp models downloaded from HuggingFace                                                                                                                                                                                                                                                                   |
-| v0.4    | Rewrite for tool calling models, agentic tool use loop, voice streaming, multiple config sub-entries                                                                                                                                                                                                               |
-| v0.3.11 | Bug-fixes and llama.cpp version update                                                                                                                                                                                                                                                                             |
-| v0.3.10 | OpenAI "Responses" API support, HA 2025.7.0 compatibility                                                                                                                                                                                                                                                          |
-| v0.3.9  | Fix conversation history                                                                                                                                                                                                                                                                                           |
-| v0.3.8  | Thinking model support, HA 2025.4 compatibility                                                                                                                                                                                                                                                                    |
-| v0.3.7  | German ICL examples, multi-turn fixes                                                                                                                                                                                                                                                                              |
-| v0.3.6  | Small llama.cpp backend fixes                                                                                                                                                                                                                                                                                      |
-| v0.3.5  | Polish ICL examples                                                                                                                                                                                                                                                                                                |
-| v0.3.4  | Full Polish translation, improved language support                                                                                                                                                                                                                                                                 |
-| v0.3.3  | Generic OpenAI improvements, area handling                                                                                                                                                                                                                                                                         |
-| v0.3.2  | Script entity fixes                                                                                                                                                                                                                                                                                                |
-| v0.3.1  | Basic area support in prompting                                                                                                                                                                                                                                                                                    |
-| v0.3    | Home Assistant LLM API support, improved prompting                                                                                                                                                                                                                                                                 |
-| v0.2.x  | Ollama support, in-context learning, flash attention, prompt caching                                                                                                                                                                                                                                               |
-| v0.1    | Initial Release                                                                                                                                                                                                                                                                                                    |
 
 </details>
 

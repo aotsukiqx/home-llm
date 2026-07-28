@@ -38,7 +38,7 @@ Welcome to the Quickstart guide for setting up Home-LLM. The component has MANY 
 The following link will open your Home Assistant installation and download the integration:  
 **Remember to restart Home Assistant after installing the component!**
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=acon96)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?category=Integration&repository=home-llm&owner=aotsukiqx)
 
 After installation, A "Local LLM" device should show up in the `Settings > Devices and Services > [Devices]` tab now.
 

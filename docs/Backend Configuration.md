@@ -80,7 +80,7 @@ For details about the sampling parameters, see here: https://github.com/oobaboog
 ## Wheels
 The wheels for `llama-cpp-python` can be built or downloaded manually for installation/re-installation.
 
-Take the appropriate wheel and copy it to the `custom_components/llama_conversation/` directory.
+Take the appropriate wheel and copy it to the `custom_components/home_llm_router/` directory.
 
 After the wheel file has been copied to the correct folder, attempt the wheel installation step of the integration setup. The local wheel file should be detected and installed.
 
