@@ -457,6 +457,7 @@ class OptionsFlow(BaseOptionsFlow):
     wheel_install_error: str | None = None
     wheel_install_successful: bool = False
     _client_config: dict[str, Any] | None = None
+    _routes_working_copy: list[dict[str, Any]] | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -610,12 +611,10 @@ class OptionsFlow(BaseOptionsFlow):
                 fallback=user_input.get("fallback"),
             )
             await router.config_store.async_save(new_config)
-
-            # Re-initialize router with new config
             router._initialized = False
-            await router.async_initialize()
 
-            return self.async_create_entry(data=client_config)
+            self._routes_working_copy = [r.to_dict() for r in existing.routes]
+            return await self.async_step_router_routes()
 
         # Build form schema with pre-filled values
         current_emb = router.config_store.data.embedding
@@ -663,7 +662,156 @@ class OptionsFlow(BaseOptionsFlow):
             description_placeholders={
                 "routes_count": str(routes_count),
             },
-            last_step=True,
+            last_step=False,
+        )
+
+    async def _get_router(self):
+        return self.hass.data.get(DOMAIN, {}).get("router_agent")
+
+    async def async_step_router_routes(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage routing rules."""
+        router = await self._get_router()
+        if not router:
+            return self.async_create_entry(data=self._client_config or {})
+
+        if user_input is not None:
+            action = user_input.get("action")
+            if action == "add":
+                self._edit_route_index = -1
+                return await self.async_step_router_edit_route()
+            elif action and action.startswith("edit_"):
+                self._edit_route_index = int(action.split("_", 1)[1])
+                return await self.async_step_router_edit_route()
+            elif action == "finish":
+                await router.async_initialize()
+                return self.async_create_entry(data=self._client_config or {})
+
+        routes = self._routes_working_copy or []
+        options = [("add", "Add new route")]
+        for i, r in enumerate(routes):
+            label = r.get("label") or r.get("name", f"route_{i}")
+            target = r.get("target", "?")
+            options.append((f"edit_{i}", f"{label} ({target})"))
+        options.append(("finish", "Done"))
+
+        schema = vol.Schema({
+            vol.Required("action"): SelectSelector(SelectSelectorConfig(
+                options=[{"value": v, "label": l} for v, l in options],
+                mode=SelectSelectorMode.LIST,
+            )),
+        })
+        return self.async_show_form(
+            step_id="router_routes",
+            data_schema=schema,
+            description_placeholders={
+                "route_count": str(len(routes)),
+            },
+            last_step=False,
+        )
+
+    async def async_step_router_edit_route(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add or edit a single routing rule."""
+        router = await self._get_router()
+        if not router:
+            return self.async_create_entry(data=self._client_config or {})
+
+        routes = self._routes_working_copy or []
+        idx = getattr(self, "_edit_route_index", -1)
+        existing = routes[idx] if 0 <= idx < len(routes) else {}
+
+        if user_input is not None:
+            route_data = {
+                "name": user_input["name"],
+                "label": user_input.get("label", user_input["name"]),
+                "target": user_input["target"],
+                "threshold": float(user_input.get("threshold", 0.70)),
+                "utterances": [u.strip() for u in user_input.get("utterances", "").split("\n") if u.strip()],
+            }
+            if idx >= 0 and idx < len(routes):
+                routes[idx] = route_data
+            else:
+                routes.append(route_data)
+            self._routes_working_copy = routes
+
+            from .router_config import RouteDefinition, RouterConfigData
+            existing_config = await router.config_store.async_load()
+            route_objs = [RouteDefinition.from_dict(r) for r in routes]
+            new_config = RouterConfigData(
+                embedding=existing_config.embedding,
+                routes=route_objs,
+                fallback=existing_config.fallback,
+            )
+            await router.config_store.async_save(new_config)
+            router._initialized = False
+
+            return await self.async_step_router_routes()
+
+        backend_options = router.get_available_backends()
+        schema = {
+            vol.Required("name", default=existing.get("name", "")): str,
+            vol.Optional("label", default=existing.get("label", existing.get("name", ""))): str,
+        }
+        if backend_options:
+            schema[vol.Required("target", default=existing.get("target", backend_options[0].value))] = SelectSelector(
+                SelectSelectorConfig(options=backend_options, mode=SelectSelectorMode.DROPDOWN)
+            )
+        else:
+            schema[vol.Required("target", default=existing.get("target", ""))] = str
+
+        schema[vol.Optional("threshold", default=existing.get("threshold", 0.70))] = NumberSelector(
+            NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)
+        )
+        default_utterances = "\n".join(existing.get("utterances", []))
+        schema[vol.Optional("utterances", default=default_utterances)] = TextSelector(
+            TextSelectorConfig(multiple=True, multiline=True)
+        )
+
+        return self.async_show_form(
+            step_id="router_edit_route",
+            data_schema=vol.Schema(schema),
+            last_step=False,
+        )
+
+    async def async_step_router_delete_route(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Delete a routing rule."""
+        router = await self._get_router()
+        if not router:
+            return self.async_create_entry(data=self._client_config or {})
+
+        routes = self._routes_working_copy or []
+        if user_input is not None:
+            idx = user_input.get("route_index")
+            if idx is not None and 0 <= idx < len(routes):
+                del routes[idx]
+                self._routes_working_copy = routes
+                existing_config = await router.config_store.async_load()
+                from .router_config import RouteDefinition, RouterConfigData
+                route_objs = [RouteDefinition.from_dict(r) for r in routes]
+                new_config = RouterConfigData(
+                    embedding=existing_config.embedding,
+                    routes=route_objs,
+                    fallback=existing_config.fallback,
+                )
+                await router.config_store.async_save(new_config)
+                router._initialized = False
+            return await self.async_step_router_routes()
+
+        schema = {
+            vol.Required("route_index"): SelectSelector(SelectSelectorConfig(
+                options=[{"value": str(i), "label": r.get("label", r.get("name", f"route_{i}"))} for i, r in enumerate(routes)],
+                mode=SelectSelectorMode.DROPDOWN,
+            )),
+        }
+        return self.async_show_form(
+            step_id="router_delete_route",
+            data_schema=vol.Schema(schema),
+            last_step=False,
         )
     
 
