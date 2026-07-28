@@ -1,0 +1,91 @@
+router_configure:
+  name: Configure Router Agent
+  description: >
+    Update the Router Agent's embedding service configuration and routing rules.
+    Route rules use cosine similarity to match user queries against example utterances
+    and dispatch to the configured backend.
+  fields:
+    embedding:
+      name: Embedding Service
+      description: OpenAI-compatible embedding API configuration for semantic routing.
+      required: false
+      selector:
+        object:
+          data:
+            base_url:
+              name: Base URL
+              description: The base URL of the OpenAI-compatible embedding API (e.g., https://api.openai.com).
+              required: true
+              selector:
+                text:
+            api_key:
+              name: API Key
+              description: Authentication key for the embedding API.
+              required: false
+              selector:
+                text:
+                  type: password
+            model:
+              name: Model
+              description: Embedding model name (e.g., text-embedding-3-large).
+              required: true
+              selector:
+                text:
+            dimensions:
+              name: Dimensions
+              description: Output dimensions for the embedding vectors (e.g., 1024).
+              required: false
+              default: 1024
+              selector:
+                number:
+                  min: 64
+                  max: 3072
+                  step: 64
+
+    routes:
+      name: Routing Rules
+      description: List of routing rules defining intent categories and target backends.
+      required: false
+      selector:
+        object:
+          data:
+            name:
+              name: Rule Name
+              required: true
+              selector:
+                text:
+            label:
+              name: Display Label
+              required: false
+              selector:
+                text:
+            target:
+              name: Target Backend
+              description: Entity ID of the target LLM backend.
+              required: true
+              selector:
+                text:
+            threshold:
+              name: Match Threshold
+              description: Minimum cosine similarity score to trigger this route (0.0 - 1.0).
+              required: false
+              default: 0.70
+              selector:
+                number:
+                  min: 0.0
+                  max: 1.0
+                  step: 0.05
+            utterances:
+              name: Example Utterances
+              description: List of example user requests that should match this route.
+              required: false
+              selector:
+                object:
+                  multiple: true
+
+    fallback:
+      name: Fallback Backend
+      description: Default backend when no route matches or the target backend is unavailable.
+      required: false
+      selector:
+        text:
