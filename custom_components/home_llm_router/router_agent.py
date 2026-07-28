@@ -198,11 +198,12 @@ class RouterConversationAgent(ConversationEntity):
             self._session_backend_cache[conv_id] = route_result.backend.entity_id
 
         _LOGGER.info(
-            "Router: query=%.60s category=%s confidence=%.2f source=%s backend=%s",
+            "Router: query=%.60s category=%s confidence=%.2f source=%s backend=\"%s\" (%s)",
             user_input.text,
             route_result.category or "-",
             route_result.confidence,
             route_result.source,
+            route_result.backend.name,
             route_result.backend.entity_id,
         )
 
