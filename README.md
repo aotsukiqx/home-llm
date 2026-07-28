@@ -138,6 +138,13 @@ The fine-tuning dataset and training scripts are included in this repository:
 - Anthropic backend: Fixed authentication header format for third-party API proxies (added Bearer token prefix, removed dummy-key workaround)
 - Changed integration domain to `home_llm_router` to allow coexistence with the original `acon96/home-llm` integration
 
+### Post-release updates (2026-07-28)
+
+- **Dedicated Router ConfigEntry** — Router Agent now has its own config entry in the Integrations page. When adding the integration, choose "Configure Router Agent" to create it, or it auto-creates on first backend setup.
+- **Route management UI** — Full CRUD UI for routing rules: add/edit/delete rules with backend selection (dropdown from discovered backends) and multi-line utterance input.
+- **Route delete step** — Dedicated step for removing routing rules with backend confirmation.
+- **ICL CSV files restored** — Fixed missing in_context_examples.csv during domain migration.
+
 <details>
 <summary>Upstream Version History (acon96/home-llm v0.4.10 and earlier)</summary>
 
