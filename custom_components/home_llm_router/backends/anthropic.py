@@ -173,11 +173,8 @@ class AnthropicAPIClient(LocalLLMClient):
 
         kwargs: Dict[str, Any] = {
             "timeout": effective_timeout,
-            "base_url": self.base_url,
+            "base_url": self.base_url.rstrip("/"),
             "api_key": self.api_key,
-            "default_headers": {
-                "Authorization": f"Bearer {self.api_key}",
-            },
         }
 
         def create_client():
@@ -207,11 +204,8 @@ class AnthropicAPIClient(LocalLLMClient):
         try:
             kwargs: Dict[str, Any] = {
                 "timeout": 10.0,
-                "base_url": base_url,
+                "base_url": base_url.rstrip("/"),
                 "api_key": api_key,
-                "default_headers": {
-                    "Authorization": f"Bearer {api_key}",
-                },
             }
 
             # Create client in executor to avoid blocking SSL operations
