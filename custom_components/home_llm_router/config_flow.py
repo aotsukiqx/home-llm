@@ -839,8 +839,8 @@ class OptionsFlow(BaseOptionsFlow):
 
         routes = self._routes_working_copy or []
         if user_input is not None:
-            idx = user_input.get("route_index")
-            if idx is not None and 0 <= idx < len(routes):
+            idx = int(user_input.get("route_index", -1))
+            if 0 <= idx < len(routes):
                 del routes[idx]
                 self._routes_working_copy = routes
                 existing_config = await router.config_store.async_load()
