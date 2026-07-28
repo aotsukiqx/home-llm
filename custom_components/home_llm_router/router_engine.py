@@ -17,6 +17,10 @@ class EmbeddingClient:
 
     def __init__(self, base_url: str, api_key: str, model: str, dimensions: int) -> None:
         self.base_url = base_url.rstrip("/")
+        # Strip common path suffixes so appended /v1/embeddings doesn't duplicate
+        for suffix in ("/v1", "/embeddings"):
+            if self.base_url.endswith(suffix):
+                self.base_url = self.base_url[: -len(suffix)]
         self.api_key = api_key
         self.model = model
         self.dimensions = dimensions
