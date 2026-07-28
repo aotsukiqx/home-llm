@@ -456,6 +456,10 @@ class ConfigFlow(BaseConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a Router ConfigEntry for managing routing rules."""
+        # Block duplicate router entries
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER:
+                return self.async_abort(reason="duplicate_router")
         return self.async_create_entry(
             title="Router Configuration",
             data={CONF_ENTRY_TYPE: ENTRY_TYPE_ROUTER},

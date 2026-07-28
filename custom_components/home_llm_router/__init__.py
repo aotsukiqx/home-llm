@@ -211,6 +211,11 @@ async def _async_update_listener(hass: HomeAssistant, entry: LocalLLMConfigEntry
 
 async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> bool:
     """Unload the integration."""
+    # Router entry — no platform setup to unload
+    if entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        return True
+
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
@@ -231,6 +236,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) ->
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: LocalLLMConfigEntry):
     """Migrate old entry."""
+    # Router entries don't need migration
+    if config_entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER:
+        return True
+
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     # 1 -> 2: This was a breaking change so force users to re-create entries
