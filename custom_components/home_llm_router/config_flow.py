@@ -503,7 +503,7 @@ class OptionsFlow(BaseOptionsFlow):
         """Manage the options."""
         # Router entry → show router config directly
         if self.config_entry.data.get(CONF_ENTRY_TYPE) == ENTRY_TYPE_ROUTER:
-            return await self.async_step_router()
+            return await self._async_router_step_safe(user_input)
 
         errors = {}
         description_placeholders = {}
@@ -621,6 +621,16 @@ class OptionsFlow(BaseOptionsFlow):
                 _LOGGER.debug(f"Finished install: {wheel_install_result}")
                 self.wheel_install_successful = True
                 return self.async_show_progress_done(next_step_id="init")
+
+    async def _async_router_step_safe(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Wrapper around async_step_router with error handling."""
+        try:
+            return await self.async_step_router(user_input)
+        except Exception as err:
+            _LOGGER.exception("Router config step crashed: %s", err)
+            return self.async_abort(reason="router_config_error")
 
     async def async_step_router(
         self, user_input: dict[str, Any] | None = None
