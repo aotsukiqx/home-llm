@@ -132,6 +132,13 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent, LocalLLMEntit
             else:
                 message_history = []
 
+            # Ensure current user input is in message history
+            # (chat_log.content has it, but it's only copied when remember_conversation=True)
+            if not remember_conversation:
+                message_history.append(
+                    conversation.UserContent(content=user_input.text)
+                )
+
             # trim message history before processing if necessary
             if remember_num_interactions and len(message_history) > (remember_num_interactions * 2) + 1:
                 new_message_history = [message_history[0]] # copy system prompt
