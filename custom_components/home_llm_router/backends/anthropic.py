@@ -174,11 +174,9 @@ class AnthropicAPIClient(LocalLLMClient):
         kwargs: Dict[str, Any] = {
             "timeout": effective_timeout,
             "base_url": self.base_url,
-            # Use dummy key for SDK, set auth via headers for compatible API support
-            "api_key": "dummy-key-for-sdk",
+            "api_key": self.api_key,
             "default_headers": {
-                "Authorization": self.api_key,
-                "x-api-key": self.api_key,
+                "Authorization": f"Bearer {self.api_key}",
             },
         }
 
@@ -210,10 +208,9 @@ class AnthropicAPIClient(LocalLLMClient):
             kwargs: Dict[str, Any] = {
                 "timeout": 10.0,
                 "base_url": base_url,
-                "api_key": "dummy-key-for-sdk",
+                "api_key": api_key,
                 "default_headers": {
-                    "Authorization": api_key,
-                    "x-api-key": api_key,
+                    "Authorization": f"Bearer {api_key}",
                 },
             }
 
@@ -260,7 +257,7 @@ class AnthropicAPIClient(LocalLLMClient):
         # Try fallback with aiohttp direct request
         try:
             headers = {
-                "Authorization": self.api_key,
+                "Authorization": f"Bearer {self.api_key}",
                 "x-api-key": self.api_key,
                 "Content-Type": "application/json",
             }
