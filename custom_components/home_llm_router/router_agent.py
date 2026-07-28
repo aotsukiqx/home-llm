@@ -154,6 +154,7 @@ class RouterConversationAgent(ConversationEntity):
         conv_id = user_input.conversation_id
         if conv_id and conv_id in self._session_backend_cache:
             cached_id = self._session_backend_cache[conv_id]
+            _LOGGER.debug("Router cache hit for conv=%s → backend=%s", conv_id, cached_id)
             target = self._find_agent(cached_id)
             if target:
                 return await target.async_process(user_input)
@@ -195,6 +196,15 @@ class RouterConversationAgent(ConversationEntity):
 
         if conv_id:
             self._session_backend_cache[conv_id] = route_result.backend.entity_id
+
+        _LOGGER.info(
+            "Router: query=%.60s category=%s confidence=%.2f source=%s backend=%s",
+            user_input.text,
+            route_result.category or "-",
+            route_result.confidence,
+            route_result.source,
+            route_result.backend.entity_id,
+        )
 
         target = self._find_agent(route_result.backend.entity_id)
         if not target:
