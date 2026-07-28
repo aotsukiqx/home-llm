@@ -1,7 +1,7 @@
 {
   "domain": "home_llm_router",
   "name": "Home LLM (Router)",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "codeowners": ["@acon96"],
   "config_flow": true,
   "dependencies": ["conversation", "ai_task"],
