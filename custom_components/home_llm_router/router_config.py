@@ -43,6 +43,7 @@ class RouteDefinition:
     target: str  # entity_id of the target backend
     threshold: float = 0.70
     utterances: list[str] = field(default_factory=list)
+    priority: int = 100  # lower = higher priority, used as tiebreaker when scores are close
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RouteDefinition:
@@ -52,6 +53,7 @@ class RouteDefinition:
             target=data["target"],
             threshold=float(data.get("threshold", 0.70)),
             utterances=list(data.get("utterances", [])),
+            priority=int(data.get("priority", 100)),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -61,6 +63,7 @@ class RouteDefinition:
             "target": self.target,
             "threshold": self.threshold,
             "utterances": list(self.utterances),
+            "priority": self.priority,
         }
 
 

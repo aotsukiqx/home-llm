@@ -110,22 +110,42 @@ class TaskRouter:
         except Exception:
             _LOGGER.warning("Embedding API call failed, using fallback")
             return None
+
+        # Score each route, track best with priority tiebreak
         best_score = 0.0
         best_route: RouteDefinition | None = None
         for route in routes:
             prototypes = self._route_prototypes.get(route.name, [])
+            if not prototypes:
+                _LOGGER.debug("Route '%s' has no prototypes (utterances empty or not initialized)", route.name)
             for proto_vec in prototypes:
                 score = _cosine_similarity(query_vec, proto_vec)
-                if score > best_score:
+                # Higher priority (lower number) breaks ties when scores are close
+                if (score > best_score + 1e-6) or (
+                    abs(score - best_score) < 1e-6
+                    and best_route is not None
+                    and route.priority < best_route.priority
+                ):
                     best_score = score
                     best_route = route
+
         if best_route is None or best_score < best_route.threshold:
+            _LOGGER.debug(
+                "No route matched: best=%s score=%.4f threshold=%.2f",
+                best_route.name if best_route else "-",
+                best_score,
+                best_route.threshold if best_route else 0,
+            )
             fallback_id = config.fallback
             if fallback_id:
                 backend = next((b for b in backends if b.entity_id == fallback_id), None)
                 if backend:
                     return RoutingResult(backend=backend, source="fallback", confidence=best_score)
             return None
+        _LOGGER.debug(
+            "Route matched: %s score=%.4f threshold=%.2f",
+            best_route.name, best_score, best_route.threshold,
+        )
         backend = next((b for b in backends if b.entity_id == best_route.target), None)
         if not backend:
             fallback_id = config.fallback

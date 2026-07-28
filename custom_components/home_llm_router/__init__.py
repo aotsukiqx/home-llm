@@ -138,6 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalLLMConfigEntry) -> 
                                 vol.Optional("label"): str,
                                 vol.Required("target"): str,
                                 vol.Optional("threshold", default=0.70): float,
+                                vol.Optional("priority", default=100): int,
                                 vol.Optional("utterances", default=list): [str],
                             }
                         )

@@ -782,6 +782,7 @@ class OptionsFlow(BaseOptionsFlow):
                 "label": user_input.get("label", user_input["name"]),
                 "target": user_input["target"],
                 "threshold": float(user_input.get("threshold", 0.70)),
+                "priority": int(user_input.get("priority", 100)),
                 "utterances": [u.strip() for u in user_input.get("utterances", "").split("\n") if u.strip()],
             }
             if idx >= 0 and idx < len(routes):
@@ -817,6 +818,9 @@ class OptionsFlow(BaseOptionsFlow):
 
         schema[vol.Optional("threshold", default=existing.get("threshold", 0.70))] = NumberSelector(
             NumberSelectorConfig(min=0.0, max=1.0, step=0.05, mode=NumberSelectorMode.BOX)
+        )
+        schema[vol.Optional("priority", default=existing.get("priority", 100))] = NumberSelector(
+            NumberSelectorConfig(min=1, max=1000, step=1, mode=NumberSelectorMode.BOX)
         )
         default_utterances = "\n".join(existing.get("utterances", []))
         schema[vol.Optional("utterances", default=default_utterances)] = TextSelector(

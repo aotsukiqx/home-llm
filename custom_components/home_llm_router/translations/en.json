@@ -441,6 +441,7 @@
                     "label": "Display label",
                     "target": "Target backend",
                     "threshold": "Match threshold",
+                    "priority": "Priority (lower = higher)",
                     "utterances": "Example utterances (one per line)"
                 }
             },
