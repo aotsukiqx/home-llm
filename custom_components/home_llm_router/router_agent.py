@@ -149,6 +149,7 @@ class RouterConversationAgent(ConversationEntity):
         return None
 
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
+        _LOGGER.info("Router async_process called: query=%.60s", user_input.text)
         await self.async_initialize()
 
         conv_id = user_input.conversation_id
