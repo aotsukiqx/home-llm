@@ -48,37 +48,26 @@ def _convert_to_anthropic_messages(
     conversation_messages: List[conversation.Content],
     tool_result_to_str: bool = True,
 ) -> Tuple[str, List[Dict[str, Any]]]:
-    """
-    Convert Home Assistant conversation format to Anthropic Messages API format.
-
-    Returns:
-        Tuple of (system_prompt, messages_list)
-
-    Note: Anthropic requires system prompt as a separate parameter, not in messages.
-    """
     system_prompt = ""
     messages: List[Dict[str, Any]] = []
+    has_user_or_assistant = False
 
     for message in conversation_messages:
         if message.role == "system":
-            # Anthropic handles system prompts separately
             system_prompt = message.content if hasattr(message, 'content') else str(message)
         elif message.role == "user":
+            has_user_or_assistant = True
             content = []
             msg_content = message.content if hasattr(message, 'content') else str(message)
             if msg_content:
                 content.append({"type": "text", "text": msg_content})
 
-            # Handle image attachments (Anthropic supports vision)
             if hasattr(message, 'attachments') and message.attachments:
                 for attachment in message.attachments:
                     if hasattr(attachment, 'mime_type') and attachment.mime_type.startswith("image/"):
                         try:
                             image_data = get_file_contents_base64(attachment.path)
-                            # get_file_contents_base64 returns data:mime;base64,xxx format
-                            # Extract just the base64 part for Anthropic
                             if image_data.startswith("data:"):
-                                # Remove the data URI prefix
                                 image_data = image_data.split(",", 1)[1] if "," in image_data else image_data
                             content.append({
                                 "type": "image",
@@ -94,12 +83,12 @@ def _convert_to_anthropic_messages(
             if content:
                 messages.append({"role": "user", "content": content})
         elif message.role == "assistant":
+            has_user_or_assistant = True
             content = []
             msg_content = message.content if hasattr(message, 'content') else None
             if msg_content:
                 content.append({"type": "text", "text": str(msg_content)})
 
-            # Handle tool calls (Anthropic's tool_use format)
             if hasattr(message, 'tool_calls') and message.tool_calls:
                 for tool_call in message.tool_calls:
                     tool_id = getattr(tool_call, 'id', None) or f"toolu_{id(tool_call)}"
@@ -113,7 +102,6 @@ def _convert_to_anthropic_messages(
             if content:
                 messages.append({"role": "assistant", "content": content})
         elif message.role == "tool_result":
-            # Anthropic expects tool results in user messages with tool_result content
             tool_result = message.tool_result if hasattr(message, 'tool_result') else {}
             if tool_result_to_str:
                 result_content = ha_json.json_dumps(tool_result) if isinstance(tool_result, dict) else str(tool_result)
@@ -130,6 +118,13 @@ def _convert_to_anthropic_messages(
                     "content": result_content,
                 }]
             })
+
+    if not has_user_or_assistant and system_prompt:
+        messages.append({
+            "role": "user",
+            "content": [{"type": "text", "text": system_prompt}],
+        })
+        system_prompt = ""
 
     return system_prompt, messages
 
