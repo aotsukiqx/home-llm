@@ -820,7 +820,7 @@ class OptionsFlow(BaseOptionsFlow):
         )
         default_utterances = "\n".join(existing.get("utterances", []))
         schema[vol.Optional("utterances", default=default_utterances)] = TextSelector(
-            TextSelectorConfig(multiple=True, multiline=True)
+            TextSelectorConfig(multiline=True)
         )
 
         return self.async_show_form(
