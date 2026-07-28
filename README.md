@@ -144,6 +144,18 @@ The fine-tuning dataset and training scripts are included in this repository:
 - **Route management UI** — Full CRUD UI for routing rules: add/edit/delete rules with backend selection (dropdown from discovered backends) and multi-line utterance input.
 - **Route delete step** — Dedicated step for removing routing rules with backend confirmation.
 - **ICL CSV files restored** — Fixed missing in_context_examples.csv during domain migration.
+- **UI translations** — Added field labels and descriptions for Router Agent config steps (embedding config, route editing).
+- **Routing decision logging** — Every routing decision is now logged with query preview, category, confidence, source, and backend name.
+- **Router ConfigEntry auto-creation** — Automatic ConfigEntry creation for existing installations that upgrade from earlier versions.
+- **Duplicate router guard** — Prevent accidental creation of multiple Router ConfigEntries.
+- **Router entry safety** — Protect Router entries in `async_unload_entry` and `async_migrate_entry` to prevent migration code from operating on incompatible data.
+- **Anthropic auth fix** — Removed redundant `default_headers` that could conflict with SDK's built-in `x-api-key` authentication.
+- **Anthropic empty messages fix** — When `remember_conversation=False` causes `message_history` to lack user input, inject system prompt as fallback user message to satisfy Anthropic API's `messages` requirement.
+- **User input in message history** — Fixed upstream bug where `remember_conversation=False` dropped the current user input from `message_history`, affecting all backends (not just Anthropic).
+- **Embedding URL normalization** — Strip trailing `/v1` from embedding base URL to prevent double path in API endpoint.
+- **Config flow error handling** — Wrapped router config step with exception handler to show clear error messages instead of 500.
+- **SelectOptionDict access fix** — Changed `.value` to `["value"]` for HA's TypedDict-based select options.
+- **Services.yaml** — Added to suppress HA warning about missing service definition file.
 
 <details>
 <summary>Upstream Version History (acon96/home-llm v0.4.10 and earlier)</summary>
